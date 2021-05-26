@@ -56,12 +56,25 @@ class BaseRESTAPI:
         BaseRESTAPI.create_maximum_geometric_delay_multiplications(self)
         BaseRESTAPI.startapiticker(self)
 
+    def get_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("GET", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self.wait_for_response(preparedrequestbaseurlqueuejob)
+
     def wait_for_response(self, preparedrequestbaseurlqueuejob):
         # If we get the place of the job in the queue, we know that we can wait
         # that times the time period, so we don't need to thrash the cpu with while loops.
-        place_in_queue = BaseRESTAPI.prepared_requests_baseurl_queues[
-            self.baseurl
-        ].qsize()
+        place_in_queue = (
+            BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].qsize() + 1
+        )
         # The periods before processing is the place in the queue minus 1,
         # Here we calculate and then wait for that period.
         periods_to_wait = place_in_queue - 1
@@ -86,19 +99,6 @@ class BaseRESTAPI:
             else:
                 sleep_time = delta_value
         return preparedrequestbaseurlqueuejob.prepared_response
-
-    def get_request(self, endpoint, **kwargs):
-        url = f"{self.baseurl}{endpoint}"
-        myrequest = Request("GET", url, **kwargs)
-        prepared_request = self.get_session().prepare_request(myrequest)
-        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
-            prepared_request
-        )
-        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
-            preparedrequestbaseurlqueuejob
-        )
-
-        return self.wait_for_response(preparedrequestbaseurlqueuejob)
 
     def get_session(self):
         if self.baseurl in BaseRESTAPI.baseurl_sessions:
@@ -172,7 +172,12 @@ class BaseRESTAPI:
             periodsecondsbetweenjobs=BaseRESTAPI.baseurl_period_between_request[
                 self.baseurl
             ],
-            maximum_geometric_delay_multiplications=5,
+            maximum_geometric_delay_multiplications=BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[
+                self.baseurl
+            ],
+            geometric_delay_multiplier=BaseRESTAPI.baseurl_geometric_delay_multiplier[
+                self.baseurl
+            ],
         )
 
     class APITicker:
@@ -228,6 +233,7 @@ class BaseRESTAPI:
                         sleepsecondsbetweenretries = self.periodsecondsbetweenjobs
                         break
                     else:
+                        # print("Trying exp backoff")
                         # So the request failed.
                         # Start exponential backoff retries.
                         # Here we increment the sleep between retries until the retry increment limit is reached.
@@ -243,24 +249,28 @@ class BaseRESTAPI:
                                 * self.geometric_delay_multiplier
                             )
                         else:
+                            # print("exp backoff faild -inc retry")
                             # We have reached our exponential backoff limit.
                             # Check to see if we have reached the job retry limit.
 
                             # We need to reset the multiplier count
                             geometricmultipliercount = 0
+                            sleepsecondsbetweenretries = self.periodsecondsbetweenjobs
 
-                            if preparedrequestjob.failed_attempts <= maxfailedattempts:
+                            if preparedrequestjob.failed_attempts < maxfailedattempts:
                                 preparedrequestjob.failed_attempts = (
                                     preparedrequestjob.failed_attempts + 1
                                 )
                                 # We place the job back on the queue
                                 jobqueue.put(preparedrequestjob)
                             else:
+                                # print("Job retry limit reached adding job failed")
                                 # The individual job retry limit has been breached.
                                 # Time to accept failure
                                 # Add the response to the job, dont add to the queue
                                 preparedrequestjob.prepared_response = response
                                 # Reset delay between retries to the basic period between jobs
+                                geometricmultipliercount = 0
                                 sleepsecondsbetweenretries = (
                                     self.periodsecondsbetweenjobs
                                 )
