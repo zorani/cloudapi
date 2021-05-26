@@ -48,7 +48,7 @@ maximum_failed_attempts sets how many times your request can be requeued.
 
         class Droplets(BaseRESTAPI):
             def __init__(self):
-                BaseRESTAPI.
+                BaseRESTAPI.__init__(
                     self,
                     baseurl="https://api/digitalocean.com/v2/",
                     callrateperhour=360,
