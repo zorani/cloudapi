@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name="cloudapi",
     packages=["cloudapi"],
-    version="1.0.3",
+    version="1.0.4",
     license="MIT",
     description="BaseRESTAPI ticker, automaticaly manages request response rate limits and timeouts",
     long_description="file: README.md",
@@ -11,7 +11,7 @@ setup(
     author="zoran ilievski",
     author_email="pythonic@clientuser.net",
     url="https://github.com/zorani/cloudapi",
-    download_url="https://github.com/zorani/cloudapi/archive/refs/tags/v1.0.3.tar.gz",
+    download_url="https://github.com/zorani/cloudapi/archive/refs/tags/v1.0.4.tar.gz",
     keywords=["baseapi", "requests", "rate limit", "rate limits", "api"],
     install_requires=["requests"],
     classifiers=[
