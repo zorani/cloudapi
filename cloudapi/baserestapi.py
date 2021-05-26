@@ -321,7 +321,7 @@ class BaseRESTAPI:
                         sleepsecondsbetweenretries = self.periodsecondsbetweenjobs
                         break
                     else:
-                        print("Trying exp backoff")
+                        # print("Trying exp backoff")
                         # So the request failed.
                         # Start exponential backoff retries.
                         # Here we increment the sleep between retries until the retry increment limit is reached.
@@ -337,7 +337,7 @@ class BaseRESTAPI:
                                 * self.geometric_delay_multiplier
                             )
                         else:
-                            print("exp backoff faild -inc retry")
+                            # print("exp backoff faild -inc retry")
                             # We have reached our exponential backoff limit.
                             # Check to see if we have reached the job retry limit.
 
@@ -352,7 +352,7 @@ class BaseRESTAPI:
                                 # We place the job back on the queue
                                 jobqueue.put(preparedrequestjob)
                             else:
-                                print("Job retry limit reached adding job failed")
+                                # print("Job retry limit reached adding job failed")
                                 # The individual job retry limit has been breached.
                                 # Time to accept failure
                                 # Add the response to the job, dont add to the queue
@@ -364,42 +364,3 @@ class BaseRESTAPI:
                                 )
                                 break
                     time.sleep(sleepsecondsbetweenretries)
-
-
-if __name__ == "__main__":
-
-    bapi = BaseRESTAPI("https://api.digitalocean.com/v2/")
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer ",
-    }
-
-    params = {
-        "page": "1",
-        "per_page": "1",
-    }
-
-    endpoint = "droplets"
-
-    response = bapi.get_request(endpoint, headers=headers, params=params)
-    print(response.status_code)
-    # print(response.content)
-
-    response = bapi.get_request(endpoint, headers=headers, params=params)
-    print(response.status_code)
-    # print(response.content)
-
-    response = bapi.get_request(endpoint, headers=headers, params=params)
-    print(response.status_code)
-    # print(response.content)
-
-    response = bapi.get_request(endpoint, headers=headers, params=params)
-    print(response.status_code)
-    # print(response.content)
-
-    bapi2 = BaseRESTAPI("https://api.digitalocean.com/v2/")
-    response = bapi2.get_request(endpoint, headers=headers, params=params)
-    print(response.status_code)
-
-    pass
