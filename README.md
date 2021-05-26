@@ -101,7 +101,7 @@ Here you can see a rate limit of 360 does generate a request attempt every 10 se
     8 2021-05-26 14:01:12.886259
     9 2021-05-26 14:01:22.909099
 
-You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying about the timings.
+You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying about the timings using...
 
         self.get_requests(endpoint, **kwargs)
         self.post_requests(endpoint, **kwargs)
