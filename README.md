@@ -82,6 +82,35 @@ maximum_failed_attempts sets how many times your request can be requeued.
                 ).start()
                 
                 
+Running the above code you will see that even if you rapidly make requests using BaseRESTAPI you will get the following output.
+No matter how fast you make your requests BaseRESTAPI queues and times your requests to a baseurl for you.
+
+Here you can see a rate limit of 360 does generate a request attempt every 10 seconds or so.
+
+
+    0 2021-05-26 13:59:50.208497
+    1 2021-05-26 14:00:00.219200
+    2 2021-05-26 14:00:11.723568
+    4 2021-05-26 14:00:21.704766
+    5 2021-05-26 14:00:31.753094
+    3 2021-05-26 14:00:41.760830
+    6 2021-05-26 14:00:51.858056
+    7 2021-05-26 14:01:02.185805
+    8 2021-05-26 14:01:12.886259
+    9 2021-05-26 14:01:22.909099
+
+You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying about the timings.
+
+        self.get_requests(endpoint, **kwargs)
+        self.post_requests(endpoint, **kwargs)
+        self.put_requests(endpoint, **kwargs)
+        self.delete_requests(endpoint, **kwargs)
+        self.head_requests(endpoint, **kwargs)
+        self.options_requests(endpoint, **kwargs)
+        
+Making calls to the same baseurl from other classes will still queue the requests to the same baseurl queue.
+                
+                
                 
             
             
