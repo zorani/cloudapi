@@ -6,6 +6,8 @@ setup(
     version="1.0.3",
     license="MIT",
     description="BaseRESTAPI ticker, automaticaly manages request response rate limits and timeouts",
+    long_description="file: README.md",
+    long_description_content_type="text/markdown",
     author="zoran ilievski",
     author_email="pythonic@clientuser.net",
     url="https://github.com/zorani/cloudapi",
