@@ -49,20 +49,17 @@ class BaseRESTAPI:
         request_timeout=5,
     ):
         self.baseurl = baseurl
-        self.callrateperhour = callrateperhour
-        self.geometric_delay_multiplier = geometric_delay_multiplier
-        self.maximum_geometric_delay_multiplications = (
-            maximum_geometric_delay_multiplications
+        BaseRESTAPI._create_prepared_requests_baseurl_queue(self.baseurl)
+        BaseRESTAPI._set_period_between_requests(self.baseurl, callrateperhour)
+        BaseRESTAPI._set_geometric_delay_multiplier(
+            self.baseurl, geometric_delay_multiplier
         )
-        self.maximum_failed_attempts = maximum_failed_attempts
-        self.request_timeout = request_timeout
-        BaseRESTAPI.create_prepared_requests_baseurl_queue(self)
-        BaseRESTAPI.create_period_between_requests(self)
-        BaseRESTAPI.create_geometric_delay_multiplier(self)
-        BaseRESTAPI.create_maximum_geometric_delay_multiplications(self)
-        BaseRESTAPI.create_maximum_failed_attempts(self)
-        BaseRESTAPI.create_request_timeout(self)
-        BaseRESTAPI.startapiticker(self)
+        BaseRESTAPI._set_maximum_geometric_delay_multiplications(
+            self.baseurl, maximum_geometric_delay_multiplications
+        )
+        BaseRESTAPI._set_maximum_failed_attempts(self.baseurl, maximum_failed_attempts)
+        BaseRESTAPI._set_request_timeout(self.baseurl, request_timeout)
+        BaseRESTAPI._startapiticker(self)
 
     def get_request(self, endpoint, **kwargs):
         url = f"{self.baseurl}{endpoint}"
@@ -75,9 +72,74 @@ class BaseRESTAPI:
             preparedrequestbaseurlqueuejob
         )
 
-        return self.wait_for_response(preparedrequestbaseurlqueuejob)
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
 
-    def wait_for_response(self, preparedrequestbaseurlqueuejob):
+    def post_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("POST", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
+
+    def put_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("PUT", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
+
+    def delete_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("DELETE", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
+
+    def head_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("HEAD", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
+
+    def options_request(self, endpoint, **kwargs):
+        url = f"{self.baseurl}{endpoint}"
+        myrequest = Request("OPTIONS", url, **kwargs)
+        prepared_request = self.get_session().prepare_request(myrequest)
+        preparedrequestbaseurlqueuejob = PreparedRequestBaseURLQueueJob(
+            prepared_request
+        )
+        BaseRESTAPI.prepared_requests_baseurl_queues[self.baseurl].put(
+            preparedrequestbaseurlqueuejob
+        )
+
+        return self._wait_for_response(preparedrequestbaseurlqueuejob)
+
+    def _wait_for_response(self, preparedrequestbaseurlqueuejob):
         # If we get the place of the job in the queue, we know that we can wait
         # that times the time period, so we don't need to thrash the cpu with while loops.
         place_in_queue = (
@@ -116,55 +178,52 @@ class BaseRESTAPI:
             return BaseRESTAPI.baseurl_sessions[self.baseurl]
 
     @classmethod
-    def create_period_between_requests(cls, self):
-        if self.baseurl in BaseRESTAPI.baseurl_period_between_request:
-            return BaseRESTAPI.baseurl_period_between_request[self.baseurl]
+    def _set_period_between_requests(cls, baseurl, callrateperhour):
+        if baseurl in BaseRESTAPI.baseurl_period_between_request:
+            return BaseRESTAPI.baseurl_period_between_request[baseurl]
         else:
-            BaseRESTAPI.baseurl_period_between_request[self.baseurl] = float(
-                3600 / self.callrateperhour
+            BaseRESTAPI.baseurl_period_between_request[baseurl] = float(
+                3600 / callrateperhour
             )
-            # return BaseRESTAPI.baseurl_period_between_request[self.baseurl]
 
     @classmethod
-    def create_maximum_failed_attempts(cls, self):
-        if self.baseurl in BaseRESTAPI.baseurl_maximum_failed_attempts:
-            return BaseRESTAPI.baseurl_maximum_failed_attempts[self.baseurl]
+    def _set_maximum_failed_attempts(cls, baseurl, maximum_failed_attempts):
+        if baseurl in BaseRESTAPI.baseurl_maximum_failed_attempts:
+            return BaseRESTAPI.baseurl_maximum_failed_attempts[baseurl]
         else:
             BaseRESTAPI.baseurl_maximum_failed_attempts[
-                self.baseurl
-            ] = self.maximum_failed_attempts
+                baseurl
+            ] = maximum_failed_attempts
 
     @classmethod
-    def create_request_timeout(cls, self):
-        if self.baseurl in BaseRESTAPI.baseurl_request_timeout:
-            return BaseRESTAPI.baseurl_request_timeout[self.baseurl]
+    def _set_request_timeout(cls, baseurl, request_timeout):
+        if baseurl in BaseRESTAPI.baseurl_request_timeout:
+            return BaseRESTAPI.baseurl_request_timeout[baseurl]
         else:
-            BaseRESTAPI.baseurl_request_timeout[
-                self.baseurl
-            ] = self.maximum_failed_attempts
+            BaseRESTAPI.baseurl_request_timeout[baseurl] = request_timeout
 
     @classmethod
-    def create_geometric_delay_multiplier(cls, self):
-        if self.baseurl in BaseRESTAPI.baseurl_geometric_delay_multiplier:
-            return BaseRESTAPI.baseurl_geometric_delay_multiplier[self.baseurl]
+    def _set_geometric_delay_multiplier(cls, baseurl, geometric_delay_multiplier):
+        if baseurl in BaseRESTAPI.baseurl_geometric_delay_multiplier:
+            return BaseRESTAPI.baseurl_geometric_delay_multiplier[baseurl]
         else:
             BaseRESTAPI.baseurl_geometric_delay_multiplier[
-                self.baseurl
-            ] = self.geometric_delay_multiplier
+                baseurl
+            ] = geometric_delay_multiplier
 
     @classmethod
-    def create_maximum_geometric_delay_multiplications(cls, self):
-        if self.baseurl in BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications:
-            return BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[
-                self.baseurl
-            ]
+    def _set_maximum_geometric_delay_multiplications(
+        cls, baseurl, maximum_geometric_delay_multiplications
+    ):
+        if baseurl in BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications:
+            return BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[baseurl]
         else:
             BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[
-                self.baseurl
-            ] = self.maximum_geometric_delay_multiplications
+                baseurl
+            ] = maximum_geometric_delay_multiplications
 
     @classmethod
-    def create_prepared_requests_baseurl_queue(cls, self):
+    def _create_prepared_requests_baseurl_queue(cls, baseurl):
         """
         Creates a queue.Queue() to hold prepared requests while they wait to be processed and sent.
         One queue.Queue() is created per api baseurl.
@@ -175,12 +234,11 @@ class BaseRESTAPI:
             queue.Queue: A queue containing prepared requests waiting to be processed and sent.
         """
 
-        if not self.baseurl in cls.prepared_requests_baseurl_queues:
-            cls.prepared_requests_baseurl_queues[self.baseurl] = Queue(maxsize=0)
-        # return cls.prepared_requests_baseurl_queues[self.baseurl]
+        if not baseurl in cls.prepared_requests_baseurl_queues:
+            cls.prepared_requests_baseurl_queues[baseurl] = Queue(maxsize=0)
 
     @classmethod
-    def startapiticker(cls, self):
+    def _startapiticker(cls, self):
         """
         We need one ticker per baseurl queue.
         Here we detect to see if an entry has been made in the class variable dictionary
