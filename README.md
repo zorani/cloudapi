@@ -27,20 +27,22 @@ e.g. a rate limit of 360 would mean a request attempted being made every 10 seco
                                    
 geometric_delay_multiplier (defaults to 2): 
 
-When a request fails BaseRESTAPI backs off geometically by multiplying the delay between subsequent request attempts by this number.
-e.g. first attempt 10s, then wait 20s, then eait 40s
+When a request fails BaseRESTAPI backs off geometrically by multiplying the delay between subsequent request attempts by this number.
+e.g. first attempt 10s, then wait 20s, then wait 40s ... 
                                             
 maximum_geometric_delay_multiplications (defaults to 5): 
 
-The number of geometric attempts of request retries to make.
+The number of geometric backoff attempts of request retries to make.
 If no successfull request is made the request is queued for another attempt later.
 
 maximum_failed_attempts (defaults to 1):
 
 A failed attempt is defined as a failed series of geometric back off request attempts.
-When a request attempt fails it is placed back on the queue to be attempted later.
+When a request attempt fails it is placed back on the queue to be attempted later while other requests for your baseurl are given a chance to complete.
 maximum_failed_attempts sets how many times your request can be requeued.
 
+
+You need to export your digital ocean access token to your environment before running this example.
 
         from cloudapi import BaseRESTAPI
         import os
