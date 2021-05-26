@@ -28,6 +28,7 @@ e.g. a rate limit of 360 would mean a request attempted being made every 10 seco
 geometric_delay_multiplier (defaults to 2): 
 
 When a request fails BaseRESTAPI backs off geometically by multiplying the delay between subsequent request attempts by this number.
+e.g. first attempt 10s, then wait 20s, then eait 40s
                                             
 maximum_geometric_delay_multiplications (defaults to 5): 
 
