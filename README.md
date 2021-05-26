@@ -1,5 +1,9 @@
 # cloudapi
 
+# Install using pip3
+
+    pip3 install cloudapi
+
 ## baserestapi
 
 ### Example Usage
