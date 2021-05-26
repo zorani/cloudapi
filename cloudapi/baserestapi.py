@@ -36,6 +36,8 @@ class BaseRESTAPI:
     baseurl_period_between_request = {}
     baseurl_geometric_delay_multiplier = {}
     baseurl_maximum_geometric_delay_multiplications = {}
+    baseurl_maximum_failed_attempts = {}
+    baseurl_request_timeout = {}
 
     def __init__(
         self,
@@ -43,6 +45,8 @@ class BaseRESTAPI:
         callrateperhour=360,
         geometric_delay_multiplier=2,
         maximum_geometric_delay_multiplications=5,
+        maximum_failed_attempts=0,
+        request_timeout=5,
     ):
         self.baseurl = baseurl
         self.callrateperhour = callrateperhour
@@ -50,10 +54,14 @@ class BaseRESTAPI:
         self.maximum_geometric_delay_multiplications = (
             maximum_geometric_delay_multiplications
         )
+        self.maximum_failed_attempts = maximum_failed_attempts
+        self.request_timeout = request_timeout
         BaseRESTAPI.create_prepared_requests_baseurl_queue(self)
         BaseRESTAPI.create_period_between_requests(self)
         BaseRESTAPI.create_geometric_delay_multiplier(self)
         BaseRESTAPI.create_maximum_geometric_delay_multiplications(self)
+        BaseRESTAPI.create_maximum_failed_attempts(self)
+        BaseRESTAPI.create_request_timeout(self)
         BaseRESTAPI.startapiticker(self)
 
     def get_request(self, endpoint, **kwargs):
@@ -118,6 +126,24 @@ class BaseRESTAPI:
             # return BaseRESTAPI.baseurl_period_between_request[self.baseurl]
 
     @classmethod
+    def create_maximum_failed_attempts(cls, self):
+        if self.baseurl in BaseRESTAPI.baseurl_maximum_failed_attempts:
+            return BaseRESTAPI.baseurl_maximum_failed_attempts[self.baseurl]
+        else:
+            BaseRESTAPI.baseurl_maximum_failed_attempts[
+                self.baseurl
+            ] = self.maximum_failed_attempts
+
+    @classmethod
+    def create_request_timeout(cls, self):
+        if self.baseurl in BaseRESTAPI.baseurl_request_timeout:
+            return BaseRESTAPI.baseurl_request_timeout[self.baseurl]
+        else:
+            BaseRESTAPI.baseurl_request_timeout[
+                self.baseurl
+            ] = self.maximum_failed_attempts
+
+    @classmethod
     def create_geometric_delay_multiplier(cls, self):
         if self.baseurl in BaseRESTAPI.baseurl_geometric_delay_multiplier:
             return BaseRESTAPI.baseurl_geometric_delay_multiplier[self.baseurl]
@@ -169,15 +195,11 @@ class BaseRESTAPI:
         cls.prepared_requests_baseurl_tickers[self.baseurl] = self.APITicker(
             self.get_session(),
             cls.prepared_requests_baseurl_queues[self.baseurl],
-            periodsecondsbetweenjobs=BaseRESTAPI.baseurl_period_between_request[
-                self.baseurl
-            ],
-            maximum_geometric_delay_multiplications=BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[
-                self.baseurl
-            ],
-            geometric_delay_multiplier=BaseRESTAPI.baseurl_geometric_delay_multiplier[
-                self.baseurl
-            ],
+            BaseRESTAPI.baseurl_period_between_request[self.baseurl],
+            BaseRESTAPI.baseurl_maximum_geometric_delay_multiplications[self.baseurl],
+            BaseRESTAPI.baseurl_maximum_failed_attempts[self.baseurl],
+            BaseRESTAPI.baseurl_geometric_delay_multiplier[self.baseurl],
+            BaseRESTAPI.baseurl_request_timeout[self.baseurl],
         )
 
     class APITicker:
@@ -191,18 +213,24 @@ class BaseRESTAPI:
             prepared_requests_baseurl_queue,
             periodsecondsbetweenjobs,
             maximum_geometric_delay_multiplications,
-            apitimeout=5,
-            geometric_delay_multiplier=2,
+            maximum_failed_attempts,
+            geometric_delay_multiplier,
+            request_timeout,
         ):
             self.periodsecondsbetweenjobs = periodsecondsbetweenjobs
             self.maximum_geometric_delay_multiplications = (
                 maximum_geometric_delay_multiplications
             )
-            self.apitimeout = apitimeout
+            self.request_timeout = request_timeout
             self.geometric_delay_multiplier = geometric_delay_multiplier
+            self.maximum_failed_attempts = maximum_failed_attempts
             thread = threading.Thread(
                 target=self.process_jobs,
-                args=(session, prepared_requests_baseurl_queue, 5),
+                args=(
+                    session,
+                    prepared_requests_baseurl_queue,
+                    self.maximum_failed_attempts,
+                ),
             )
             thread.daemon = True
             thread.start()
@@ -224,7 +252,9 @@ class BaseRESTAPI:
 
                 # Here we start the cycle of attempting a request and handling failures and delays.
                 while True:
-                    response = session.send(prepared_request, timeout=self.apitimeout)
+                    response = session.send(
+                        prepared_request, timeout=self.request_timeout
+                    )
                     if response:
                         # If the request returned a successfull response
                         # pass the successfull response to the job object
@@ -233,7 +263,7 @@ class BaseRESTAPI:
                         sleepsecondsbetweenretries = self.periodsecondsbetweenjobs
                         break
                     else:
-                        # print("Trying exp backoff")
+                        print("Trying exp backoff")
                         # So the request failed.
                         # Start exponential backoff retries.
                         # Here we increment the sleep between retries until the retry increment limit is reached.
@@ -249,7 +279,7 @@ class BaseRESTAPI:
                                 * self.geometric_delay_multiplier
                             )
                         else:
-                            # print("exp backoff faild -inc retry")
+                            print("exp backoff faild -inc retry")
                             # We have reached our exponential backoff limit.
                             # Check to see if we have reached the job retry limit.
 
@@ -264,7 +294,7 @@ class BaseRESTAPI:
                                 # We place the job back on the queue
                                 jobqueue.put(preparedrequestjob)
                             else:
-                                # print("Job retry limit reached adding job failed")
+                                print("Job retry limit reached adding job failed")
                                 # The individual job retry limit has been breached.
                                 # Time to accept failure
                                 # Add the response to the job, dont add to the queue
