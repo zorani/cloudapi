@@ -74,13 +74,13 @@ You need to export your digital ocean access token to your environment before ru
         if __name__ == "__main__":
             digitalocean_droplets = Droplets()
             
-            def make_a_call_to_digitalocea_to_list_all_droplets(x):
+            def make_a_call_to_digitalocean_to_list_all_droplets(x):
                 response = digitalocean_droplets.list_all_droplets()
                 print(x, datetime.datetime.now())
 
             for x in range(0, 10):
                 threading.Thread(
-                    target=make_a_call_to_digitalocea_to_list_all_droplets, args=(x,)
+                    target=make_a_call_to_digitalocean_to_list_all_droplets, args=(x,)
                 ).start()
                 
                 
