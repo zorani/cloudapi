@@ -1,0 +1,94 @@
+<h1 id="cloudapi">cloudapi</h1>
+<h1 id="install-using-pip3">Install using pip3</h1>
+<pre><code>pip3 <span class="hljs-keyword">install</span> cloudapi
+</code></pre>
+<h2 id="baserestapi">baserestapi</h2>
+<h3 id="example-usage">Example Usage</h3>
+<p>This example class Droplets is built targeting the DigitalOcean API - other APIs are available.</p>
+<p>It is designed to do one thing. Make a GET request to the droplet endpoint and list all available droplets.</p>
+<p>Class Droplets inherits from BaseRESTAPI</p>
+<p>BaseRESTAPI accepts the following arguments</p>
+<h4 id="required">Required</h4>
+<p>baseurl: </p>
+<p>Your API base URL</p>
+<h4 id="optional">Optional</h4>
+<p>callrateperhour (defaults to 360): </p>
+<p>The rate limit for requests for your API service. The number of requests per hour.
+    e.g. a rate limit of 360 would mean a request attempted being made every 10 seconds.</p>
+<p>geometric_delay_multiplier (defaults to 2): </p>
+<p>When a request fails BaseRESTAPI backs off geometrically by multiplying the delay between subsequent request attempts
+    by this number.
+    e.g. first attempt 10s, then wait 20s, then wait 40s ... </p>
+<p>maximum_geometric_delay_multiplications (defaults to 5): </p>
+<p>The number of geometric backoff attempts of request retries to make.
+    If no successfull request is made the request is queued for another attempt later.</p>
+<p>maximum_failed_attempts (defaults to 1):</p>
+<p>A failed attempt is defined as a failed series of geometric back off request attempts.
+    When a request attempt fails it is placed back on the queue to be attempted later while other requests for your
+    baseurl are given a chance to complete.
+    maximum_failed_attempts sets how many times your request can be requeued.</p>
+<p>You need to export your digital ocean access token to your environment before running this example.</p>
+<pre><code>    from cloudapi import BaseRESTAPI
+    import os
+    import threading
+    import datetime
+
+    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Droplets</span>(<span class="hljs-title">BaseRESTAPI</span>):</span>
+        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+            BaseRESTAPI.__init_<span class="hljs-number">_</span>(
+                <span class="hljs-keyword">self</span>,
+                baseurl=<span class="hljs-string">"https://api/digitalocean.com/v2/"</span>,
+                callrateperhour=<span class="hljs-number">360</span>,
+                geometric_delay_multiplier=<span class="hljs-number">2</span>,
+                maximum_geometric_delay_multiplications=<span class="hljs-number">5</span>,
+                maximum_failed_attempts=<span class="hljs-number">1</span>,
+        (
+
+            <span class="hljs-keyword">self</span>.token = os.getenv(<span class="hljs-string">"DIGITALOCEAN_ACCESS_TOKEN"</span>,<span class="hljs-string">""</span>)
+            <span class="hljs-keyword">self</span>.baseheaders = {
+                <span class="hljs-string">"Content-Type"</span>: <span class="hljs-string">"application/json"</span>,
+                <span class="hljs-string">"Authorization"</span>: f<span class="hljs-string">"Bearer {self.token} "</span>,
+            }
+
+        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">list_all_droplets</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, **kwargs)</span></span>:
+            endpoint = <span class="hljs-string">"droplets"</span>
+            headers = <span class="hljs-keyword">self</span>.baseheaders
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">self</span>.get_request(endpoint, headers=headers, **kwargs)
+
+    <span class="hljs-keyword">if</span> __name_<span class="hljs-number">_</span> == <span class="hljs-string">"__main__"</span>:
+        digitalocean_droplets = Droplets()
+
+        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_a_call_to_digitalocean_to_list_all_droplets</span><span class="hljs-params">(x)</span></span>:
+            response = digitalocean_droplets.list_all_droplets()
+            print(x, datetime.datetime.now())
+
+        <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>, <span class="hljs-number">10</span>):
+            threading.Thread(
+                target=make_a_call_to_digitalocean_to_list_all_droplets, args=(x,)
+            ).start()
+</code></pre>
+<p>Running the above code you will see that even if you rapidly make requests using BaseRESTAPI you will get the
+    following output.
+    No matter how fast you make your requests BaseRESTAPI queues and times your requests to a baseurl for you.</p>
+<p>Here you can see a rate limit of 360 does generate a request attempt every 10 seconds or so.</p>
+<pre><code><span class="hljs-symbol">0 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">13</span>:<span class="hljs-number">59</span>:<span class="hljs-number">50.208497</span>
+<span class="hljs-symbol">1 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00.219200</span>
+<span class="hljs-symbol">2 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">11.723568</span>
+<span class="hljs-symbol">4 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">21.704766</span>
+<span class="hljs-symbol">5 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">31.753094</span>
+<span class="hljs-symbol">3 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">41.760830</span>
+<span class="hljs-symbol">6 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">51.858056</span>
+<span class="hljs-symbol">7 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">02.185805</span>
+<span class="hljs-symbol">8 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">12.886259</span>
+<span class="hljs-symbol">9 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">22.909099</span>
+</code></pre>
+<p>You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying about the
+    timings using...</p>
+<pre><code>    <span class="hljs-keyword">self.get_requests(endpoint, </span>**kwargs)
+    <span class="hljs-keyword">self.post_requests(endpoint, </span>**kwargs)
+    <span class="hljs-keyword">self.put_requests(endpoint, </span>**kwargs)
+    <span class="hljs-keyword">self.delete_requests(endpoint, </span>**kwargs)
+    <span class="hljs-keyword">self.head_requests(endpoint, </span>**kwargs)
+    <span class="hljs-keyword">self.options_requests(endpoint, </span>**kwargs)
+</code></pre>
+<p>Making calls to the same baseurl from other classes will still queue the requests to the same baseurl queue.</p>
