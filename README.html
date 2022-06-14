@@ -1,94 +1,240 @@
-<h1 id="cloudapi">cloudapi</h1>
-<h1 id="install-using-pip3">Install using pip3</h1>
-<pre><code>pip3 <span class="hljs-keyword">install</span> cloudapi
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome file</title>
+    <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+    <div class="stackedit__html">
+        <h1 id="cloudapi">cloudapi</h1>
+        <h1 id="install-using-pip3">Install using pip3</h1>
+        <pre><code>pip3 install cloudapi
 </code></pre>
-<h2 id="baserestapi">baserestapi</h2>
-<h3 id="example-usage">Example Usage</h3>
-<p>This example class Droplets is built targeting the DigitalOcean API - other APIs are available.</p>
-<p>It is designed to do one thing. Make a GET request to the droplet endpoint and list all available droplets.</p>
-<p>Class Droplets inherits from BaseRESTAPI</p>
-<p>BaseRESTAPI accepts the following arguments</p>
-<h4 id="required">Required</h4>
-<p>baseurl: </p>
-<p>Your API base URL</p>
-<h4 id="optional">Optional</h4>
-<p>callrateperhour (defaults to 360): </p>
-<p>The rate limit for requests for your API service. The number of requests per hour.
-    e.g. a rate limit of 360 would mean a request attempted being made every 10 seconds.</p>
-<p>geometric_delay_multiplier (defaults to 2): </p>
-<p>When a request fails BaseRESTAPI backs off geometrically by multiplying the delay between subsequent request attempts
-    by this number.
-    e.g. first attempt 10s, then wait 20s, then wait 40s ... </p>
-<p>maximum_geometric_delay_multiplications (defaults to 5): </p>
-<p>The number of geometric backoff attempts of request retries to make.
-    If no successfull request is made the request is queued for another attempt later.</p>
-<p>maximum_failed_attempts (defaults to 1):</p>
-<p>A failed attempt is defined as a failed series of geometric back off request attempts.
-    When a request attempt fails it is placed back on the queue to be attempted later while other requests for your
-    baseurl are given a chance to complete.
-    maximum_failed_attempts sets how many times your request can be requeued.</p>
-<p>You need to export your digital ocean access token to your environment before running this example.</p>
-<pre><code>    from cloudapi import BaseRESTAPI
+        <h2 id="baserestapi">baserestapi</h2>
+        <h3 id="example-usage">Example Usage</h3>
+        <p>This example class Droplets is built targeting the DigitalOcean API - other APIs are available.</p>
+        <p>It is designed to do one thing. Make a GET request to the droplet endpoint and list all available droplets.
+        </p>
+        <p>Class Droplets inherits from BaseRESTAPI</p>
+        <p>BaseRESTAPI accepts the following arguments</p>
+        <h4 id="required">Required</h4>
+        <p>baseurl:</p>
+        <p>Your API base URL</p>
+        <h4 id="optional">Optional</h4>
+        <p>callrateperhour (defaults to 360):</p>
+        <p>The rate limit for requests for your API service. The number of requests per hour.<br>
+            e.g. a rate limit of 360 would mean a request attempted being made every 10 seconds.</p>
+        <p>geometric_delay_multiplier (defaults to 2):</p>
+        <p>When a request fails BaseRESTAPI backs off geometrically by multiplying the delay between subsequent request
+            attempts by this number.<br>
+            e.g. first attempt 10s, then wait 20s, then wait 40s …</p>
+        <p>maximum_geometric_delay_multiplications (defaults to 5):</p>
+        <p>The number of geometric backoff attempts of request retries to make.<br>
+            If no successfull request is made the request is queued for another attempt later.</p>
+        <p>maximum_failed_attempts (defaults to 1):</p>
+        <p>A failed attempt is defined as a failed series of geometric back off request attempts.<br>
+            When a request attempt fails it is placed back on the queue to be attempted later while other requests for
+            your baseurl are given a chance to complete.<br>
+            maximum_failed_attempts sets how many times your request can be requeued.</p>
+        <p>You need to export your digital ocean access token to your environment before running this example.</p>
+        <pre><code>    from cloudapi import BaseRESTAPI
     import os
     import threading
     import datetime
 
-    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Droplets</span>(<span class="hljs-title">BaseRESTAPI</span>):</span>
-        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
-            BaseRESTAPI.__init_<span class="hljs-number">_</span>(
-                <span class="hljs-keyword">self</span>,
-                baseurl=<span class="hljs-string">"https://api/digitalocean.com/v2/"</span>,
-                callrateperhour=<span class="hljs-number">360</span>,
-                geometric_delay_multiplier=<span class="hljs-number">2</span>,
-                maximum_geometric_delay_multiplications=<span class="hljs-number">5</span>,
-                maximum_failed_attempts=<span class="hljs-number">1</span>,
+    class Droplets(BaseRESTAPI):
+        def __init__(self):
+            BaseRESTAPI.__init__(
+                self,
+                baseurl="https://api/digitalocean.com/v2/",
+                callrateperhour=360,
+                geometric_delay_multiplier=2,
+                maximum_geometric_delay_multiplications=5,
+                maximum_failed_attempts=1,
         (
 
-            <span class="hljs-keyword">self</span>.token = os.getenv(<span class="hljs-string">"DIGITALOCEAN_ACCESS_TOKEN"</span>,<span class="hljs-string">""</span>)
-            <span class="hljs-keyword">self</span>.baseheaders = {
-                <span class="hljs-string">"Content-Type"</span>: <span class="hljs-string">"application/json"</span>,
-                <span class="hljs-string">"Authorization"</span>: f<span class="hljs-string">"Bearer {self.token} "</span>,
+            self.token = os.getenv("DIGITALOCEAN_ACCESS_TOKEN","")
+            self.baseheaders = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.token} ",
             }
-
-        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">list_all_droplets</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, **kwargs)</span></span>:
-            endpoint = <span class="hljs-string">"droplets"</span>
-            headers = <span class="hljs-keyword">self</span>.baseheaders
-            <span class="hljs-keyword">return</span> <span class="hljs-keyword">self</span>.get_request(endpoint, headers=headers, **kwargs)
-
-    <span class="hljs-keyword">if</span> __name_<span class="hljs-number">_</span> == <span class="hljs-string">"__main__"</span>:
+            
+        def list_all_droplets(self, **kwargs):
+            endpoint = "droplets"
+            headers = self.baseheaders
+            return self.get_request(endpoint, headers=headers, **kwargs)
+ 
+    if __name__ == "__main__":
         digitalocean_droplets = Droplets()
-
-        <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">make_a_call_to_digitalocean_to_list_all_droplets</span><span class="hljs-params">(x)</span></span>:
+        
+        def make_a_call_to_digitalocean_to_list_all_droplets(x):
             response = digitalocean_droplets.list_all_droplets()
             print(x, datetime.datetime.now())
 
-        <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>, <span class="hljs-number">10</span>):
+        for x in range(0, 10):
             threading.Thread(
                 target=make_a_call_to_digitalocean_to_list_all_droplets, args=(x,)
             ).start()
 </code></pre>
-<p>Running the above code you will see that even if you rapidly make requests using BaseRESTAPI you will get the
-    following output.
-    No matter how fast you make your requests BaseRESTAPI queues and times your requests to a baseurl for you.</p>
-<p>Here you can see a rate limit of 360 does generate a request attempt every 10 seconds or so.</p>
-<pre><code><span class="hljs-symbol">0 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">13</span>:<span class="hljs-number">59</span>:<span class="hljs-number">50.208497</span>
-<span class="hljs-symbol">1 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00.219200</span>
-<span class="hljs-symbol">2 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">11.723568</span>
-<span class="hljs-symbol">4 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">21.704766</span>
-<span class="hljs-symbol">5 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">31.753094</span>
-<span class="hljs-symbol">3 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">41.760830</span>
-<span class="hljs-symbol">6 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>:<span class="hljs-number">51.858056</span>
-<span class="hljs-symbol">7 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">02.185805</span>
-<span class="hljs-symbol">8 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">12.886259</span>
-<span class="hljs-symbol">9 </span><span class="hljs-number">2021</span>-<span class="hljs-number">05</span>-<span class="hljs-number">26</span> <span class="hljs-number">14</span>:<span class="hljs-number">01</span>:<span class="hljs-number">22.909099</span>
+        <p>Running the above code you will see that even if you rapidly make requests using BaseRESTAPI you will get the
+            following output.<br>
+            No matter how fast you make your requests BaseRESTAPI queues and times your requests to a baseurl for you.
+        </p>
+        <p>Here you can see a rate limit of 360 does generate a request attempt every 10 seconds or so.</p>
+        <pre><code>0 2021-05-26 13:59:50.208497
+1 2021-05-26 14:00:00.219200
+2 2021-05-26 14:00:11.723568
+4 2021-05-26 14:00:21.704766
+5 2021-05-26 14:00:31.753094
+3 2021-05-26 14:00:41.760830
+6 2021-05-26 14:00:51.858056
+7 2021-05-26 14:01:02.185805
+8 2021-05-26 14:01:12.886259
+9 2021-05-26 14:01:22.909099
 </code></pre>
-<p>You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying about the
-    timings using...</p>
-<pre><code>    <span class="hljs-keyword">self.get_requests(endpoint, </span>**kwargs)
-    <span class="hljs-keyword">self.post_requests(endpoint, </span>**kwargs)
-    <span class="hljs-keyword">self.put_requests(endpoint, </span>**kwargs)
-    <span class="hljs-keyword">self.delete_requests(endpoint, </span>**kwargs)
-    <span class="hljs-keyword">self.head_requests(endpoint, </span>**kwargs)
-    <span class="hljs-keyword">self.options_requests(endpoint, </span>**kwargs)
+        <p>You can now make GET, POST, PUT, DELETE, HEAD and OPTIONS requests from withing your class without worrying
+            about the timings using…</p>
+        <pre><code>    self.get_requests(endpoint, **kwargs)
+    self.post_requests(endpoint, **kwargs)
+    self.put_requests(endpoint, **kwargs)
+    self.delete_requests(endpoint, **kwargs)
+    self.head_requests(endpoint, **kwargs)
+    self.options_requests(endpoint, **kwargs)
 </code></pre>
-<p>Making calls to the same baseurl from other classes will still queue the requests to the same baseurl queue.</p>
+        <p>Making calls to the same baseurl from other classes will still queue the requests to the same baseurl queue.
+        </p>
+        <h2 id="googlebaserestapi">googlebaserestapi</h2>
+        <p>Ha, so google throws a spanner in the works which is why this package has a seperate GoogleBaseRESTAPI.<br>
+            Google like to authenticate it’s api calls using</p>
+        <pre><code>import google.auth
+import google.auth.transport.requests
+</code></pre>
+        <p>This walkthrough targets googles DV360 API service. This applies to all google API services using
+            google.auth<br>
+            to authenticate.</p>
+        <p>GoogleBaseRESTAPI takes care of all the authentication and also the call rates as above but you need<br>
+            to create a couple of json files with your google authentication details.</p>
+        <p>You then need to export environment variables that point to the location of these json files.</p>
+        <pre><code>export GOOGLE_APPLICATION_CREDENTIALS=/home/ubuntu/.creds/.google/360servicecreds.json
+export GOOGLE_DV360_ACCOUNT_INFO=/home/ubuntu/.creds/.google/360accountinfo.json
+</code></pre>
+        <h3 id="scope-list">Scope List</h3>
+        <p>You will need a list of scopes for your particular google API service.<br>
+            For DV360 you need the following,</p>
+        <pre><code>    scopelist = [
+        "https://www.googleapis.com/auth/display-video",
+        "https://www.googleapis.com/auth/doubleclickbidmanager"
+    ]
+</code></pre>
+        <p>which we will place these scopes in the 360accountinfo.json file.</p>
+        <h3 id="servicecreds.json-content">360servicecreds.json Content</h3>
+        <p>You can generate this service account json file by going to <a
+                href="https://console.developers.google.com/iam-admin/iam/">https://console.developers.google.com/iam-admin/iam/</a>
+            .<br>
+            It will contain your private key credentials. Once you have followed the link, select your project,
+            select<br>
+            “service accounts” and then create a new one. I would select the role as “viewer”.</p>
+        <pre><code>{
+  "type": "service_account",
+  "project_id": &lt;your project id&gt;,
+  "private_key_id": &lt;your private key id&gt; ,
+  "private_key": &lt;your private key&gt; ,  
+  "client_email": &lt;your client email&gt; ,
+  "client_id": &lt;your client id&gt; ,
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": &lt;your client_x509_cert_url &gt;
+}
+</code></pre>
+        <h3 id="accountinfo.json-content">360accountinfo.json Content</h3>
+        <p>You’ll need to create this file yourself with your account details for your particular<br>
+            google api. For the DV360 API we need the keys advertiser_id, partner_id, and<br>
+            service_endpoint.</p>
+        <pre><code>{
+    "advertiser_id": &lt;your advertisers id&gt;,
+    "partner_id": &lt;your partner id&gt;,
+    "service_endpoint": "https://displayvideo.googleapis.com/v1/",
+    "scopelist" : [ "https://www.googleapis.com/auth/display-video", "https://www.googleapis.com/auth/doubleclickbidmanager"]
+}
+</code></pre>
+        <p>Once you have gathered and prepared all of the authentication and account information above and<br>
+            set the environment variables we can move on to an example using GoogleBaseRESTAPI to access<br>
+            the DV360 API and make a basic API call.</p>
+        <p>Here it is… we’re creating a new class called DV360 which inherits from GoogleBaseRESTAPI</p>
+        <pre><code>#!/usr/bin/env python3
+
+from cloudapi import GoogleBaseRESTAPI
+import os
+import threading
+import datetime
+from jettings import Jettings
+
+class DV360(GoogleBaseRESTAPI):
+    def __init__(self):
+        # You will need to read the account info you have collected in the 360accountinfo.json file.
+        self.google_dv360_account_info = os.getenv("GOOGLE_DV360_ACCOUNT_INFO")
+        self.jaccountinfo = Jettings(self.google_dv360_account_info)
+        # These variables are unique to which ever google service API you are using.
+        # They will be different for each google api and you will use them to construct api calls
+        # according to the particular api documentation.  
+        # Here we will make calls following the DV360 api documentation.
+        self.advertiser_id = self.jaccountinfo.gets(["advertiser_id"])
+        self.partner_id = self.jaccountinfo.gets(["partner_id"])
+        # These variables, "baseurl", and "scopelist" are mandetory for GoogleBaseRESTAPI and need to be passed 
+        # to the GoogleBaseRESTAPI init as showen below.
+        self.baseurl = self.jaccountinfo.gets(["service_endpoint"])
+        self.scopelist = self.jaccountinfo.gets(["scopelist"])
+        GoogleBaseRESTAPI.__init__(
+            self,
+            baseurl=self.baseurl,
+            scopelist=self.scopelist,
+            callrateperhour=360,
+            geometric_delay_multiplier=2,
+            maximum_geometric_delay_multiplications=5,
+            maximum_failed_attempts=1,
+        )
+
+    def list_advertisers(self, **kwargs):
+        endpoint = "advertisers"
+        return self.get_request(
+            endpoint, params={"partnerId": self.partner_id}, **kwargs
+        )
+
+
+if __name__ == "__main__":
+    dv360 = DV360()
+
+    def make_a_call_to_dv360_to_list_advertisers(x):
+        response = dv360.list_advertisers()
+        print(x, datetime.datetime.now())
+
+    for x in range(0, 10):
+        threading.Thread(
+            target=make_a_call_to_dv360_to_list_advertisers, args=(x,)
+        ).start()
+</code></pre>
+        <p>As in the first example you will see that if you rapid fire requests to a particular google service api<br>
+            GoogleBaseRESTAPI will rate limit to the correct rate.</p>
+        <p>You will see if you run the above code the same output for a rate limit of 360.<br>
+            A request is queued and sent every 10 seconds or so.</p>
+        <pre><code>0 2022-06-13 15:18:01.015369
+2 2022-06-13 15:18:12.530774
+1 2022-06-13 15:18:23.629947
+3 2022-06-13 15:18:35.154949
+4 2022-06-13 15:18:45.118919
+6 2022-06-13 15:18:56.279556
+5 2022-06-13 15:19:07.791847
+7 2022-06-13 15:19:17.902751
+8 2022-06-13 15:19:30.415332
+9 2022-06-13 15:19:40.344704
+</code></pre>
+        <p>Google will be happy you are not overloading their api servers.</p>
+    </div>
+</body>
+
+</html>
