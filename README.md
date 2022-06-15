@@ -176,7 +176,7 @@ service_endpoint.
     {
         "advertiser_id": <your advertisers id>,
         "partner_id": <your partner id>,
-        "service_endpoint": "https://displayvideo.googleapis.com/v1/",
+        "service_endpoint": "https://displayvideo.googleapis.com/",
         "scopelist" : [ "https://www.googleapis.com/auth/display-video", "https://www.googleapis.com/auth/doubleclickbidmanager"]
     }
 

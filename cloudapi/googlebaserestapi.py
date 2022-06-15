@@ -48,6 +48,7 @@ class GoogleBaseRESTAPI:
     baseurl_maximum_geometric_delay_multiplications = {}
     baseurl_maximum_failed_attempts = {}
     baseurl_request_timeout = {}
+    baseurl_auth_token = {}
 
     def __init__(
         self,
@@ -79,7 +80,6 @@ class GoogleBaseRESTAPI:
         standard_session, auth_headers = self.get_session()
         url = f"{self.baseurl}{endpoint}"
         myrequest = Request("GET", url, headers=auth_headers, **kwargs)
-
         prepared_request = standard_session.prepare_request(myrequest)
         preparedrequestbaseurlqueuejob = GPreparedRequestBaseURLQueueJob(
             prepared_request
@@ -207,15 +207,19 @@ class GoogleBaseRESTAPI:
         credentials, project = self.google_auth()
         auth_request = google.auth.transport.requests.Request()
         credentials.refresh(auth_request)
-        self.token = credentials.token
+        GoogleBaseRESTAPI.baseurl_auth_token[self.baseurl] = credentials.token
 
     def get_session(self):
         if self.baseurl in GoogleBaseRESTAPI.baseurl_sessions:
-            headers_dict = {"Authorization": f"Bearer {self.token}"}
+            headers_dict = {
+                "Authorization": f"Bearer {GoogleBaseRESTAPI.baseurl_auth_token[self.baseurl]}"
+            }
             return GoogleBaseRESTAPI.baseurl_sessions[self.baseurl], headers_dict
         else:
             self.set_auth_token()
-            headers_dict = {"Authorization": f"Bearer {self.token}"}
+            headers_dict = {
+                "Authorization": f"Bearer {GoogleBaseRESTAPI.baseurl_auth_token[self.baseurl]}"
+            }
             GoogleBaseRESTAPI.baseurl_sessions[self.baseurl] = Session()
             return GoogleBaseRESTAPI.baseurl_sessions[self.baseurl], headers_dict
 

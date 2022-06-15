@@ -12,7 +12,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 setup(
     name="cloudapi",
     packages=["cloudapi"],
-    version="1.1.1",
+    version="1.1.2",
     license="MIT",
     description="BaseRESTAPI ticker, automaticaly manages request response rate limits and timeouts",
     long_description=long_description,
@@ -20,7 +20,7 @@ setup(
     author="zoran ilievski",
     author_email="pythonic@clientuser.net",
     url="https://github.com/zorani/cloudapi",
-    download_url="https://github.com/zorani/cloudapi/archive/refs/tags/v1.1.1.tar.gz",
+    download_url="https://github.com/zorani/cloudapi/archive/refs/tags/v1.1.2.tar.gz",
     keywords=["baseapi", "requests", "rate limit", "rate limits", "api"],
     install_requires=["requests"],
     classifiers=[
